@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editable Code with Typewriter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <style>
+    body {
+      background: #171b23;
+      color: white;
+      font-family: monospace;
+      padding: 20px;
+    }
+    code{
+        background: #171b23;
+        font-size: 25px;
+
+    }
+
+    pre {
+      position: relative;
+      margin: 0;
+    }
+
+    code.hljs {
+      display: block;
+      padding: 1em;
+        background-color: #1e1e2f; 
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      min-height: 200px;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+
+    button:hover {
+      background: #666;
+    }
+  </style>
+</head>
+<body>
+
+<div class="button-container">
+  <button class="copy-btn">Copy</button>
+  <button class="typewriter-btn">Typewriter</button>
+   <button id="startBtn">Start Recording</button>
+  <button id="stopBtn" disabled>Stop Recording</button>
+</div>
+
+<pre>
+  <code id="editable-code" class="language-javascript hljs" contenteditable="true" spellcheck="false">
+let mediaRecorder;
+    let recordedChunks = [];
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const videoEl = document.getElementById('preview');
+
+    startBtn.addEventListener('click', async () => {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { mediaSource: "screen" },
+        audio: true
+      });
+
+      videoEl.srcObject = stream;
+
+      recordedChunks = [];
+
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = function (event) {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = function () {
+        const blob = new Blob(recordedChunks, {
+  </code>
+</pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+  const codeEl = document.getElementById('editable-code');
+
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[m]));
+  }
+
+  function getCaretPosition(editableDiv) {
+    const selection = window.getSelection();
+    let caretOffset = 0;
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(editableDiv);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      caretOffset = preCaretRange.toString().length;
+    }
+    return caretOffset;
+  }
+
+  function setCaretPosition(editableDiv, offset) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    let currentOffset = 0;
+    const walker = document.createTreeWalker(editableDiv, NodeFilter.SHOW_TEXT, null, false);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const nodeLength = node.length;
+      if (currentOffset + nodeLength >= offset) {
+        const localOffset = offset - currentOffset;
+        try {
+          range.setStart(node, localOffset);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          console.warn('Caret error:', e.message);
+        }
+        return;
+      }
+      currentOffset += nodeLength;
+    }
+  }
+
+  function updateHighlight() {
+    const caretOffset = getCaretPosition(codeEl);
+    const code = codeEl.innerText;
+
+    const temp = document.createElement('code');
+    temp.className = 'language-javascript';
+    temp.textContent = code;
+
+    hljs.highlightElement(temp);
+    codeEl.innerHTML = temp.innerHTML;
+
+    setCaretPosition(codeEl, caretOffset);
+  }
+
+  codeEl.addEventListener('input', updateHighlight);
+  hljs.highlightElement(codeEl);
+
+  // Copy button
+  document.querySelector('.copy-btn').addEventListener('click', () => {
+    const text = codeEl.innerText;
+    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+  });
+
+  // Typewriter effect
+document.querySelector('.typewriter-btn').addEventListener('click', () => {
+  const originalText = codeEl.innerText;
+  let index = 0;
+  codeEl.innerHTML = ''; // Clear content
+
+  function type() {
+    if (index <= originalText.length) {
+      const currentText = originalText.substring(0, index);
+      codeEl.innerText = currentText;
+
+      // Re-highlight syntax
+      updateHighlight();
+
+      // ✅ Move cursor to end of content
+      setCaretPosition(codeEl, currentText.length);
+
+      index++;
+      setTimeout(type, 20); // Typing speed
+    }
+  }
+
+  type();
+});
+
+</script>
+
+<script>
+    // screen recorder
+       let mediaRecorder;
+    let recordedChunks = [];
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    startBtn.addEventListener('click', async () => {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { mediaSource: "screen" },
+        audio: true
+      });
+
+
+      recordedChunks = [];
+
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = function (event) {
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = function () {
+        const blob = new Blob(recordedChunks, {
+          type: 'video/webm'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'screen-recording.webm';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      mediaRecorder.start();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    });
+
+    stopBtn.addEventListener('click', () => {
+      mediaRecorder.stop();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+</script>
+
+</body>
+</html>
